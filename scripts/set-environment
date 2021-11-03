@@ -1,0 +1,115 @@
+#!/bin/bash
+set -eo pipefail
+
+#
+# Before calling this script, set the following environent variables:
+#
+#   - CI_BRANCH: the branch being tested
+#   - CI_BUILD_NUMBER: monotonically increasing build counter
+#   - PR_NUMBER: pull request number (if job is from a pull request)
+#
+# Optionally:
+#
+#   - CI_PULL_REQUEST: URL to the current pull request; used to set PR_NUMBER
+#   - DEFAULT_SITE: name of the repository; used to set ACQUIA_SITE
+#
+# Note that any environment variable given above is not set, then
+# it will be assigned its value from the corresponding CircleCI
+# environment variable.
+#
+CI_BRANCH=${CI_BRANCH:-$CIRCLE_BRANCH}
+CI_BUILD_NUMBER=${CI_BUILD_NUMBER:-$CIRCLE_BUILD_NUM}
+CI_PROJECT_NAME=${CI_PROJECT_NAME:-CIRCLE_PROJECT_REPONAME}
+
+# Circle sets both $CIRCLE_PULL_REQUEST and $CI_PULL_REQUEST.
+PR_NUMBER=${PR_NUMBER:-$CI_PULL_REQUEST}
+PR_NUMBER=${PR_NUMBER##*/}
+
+# Set up BASH_ENV if it was not set for us.
+BASH_ENV=${BASH_ENV:-$HOME/.bashrc}
+
+# Provide a default email address
+GIT_EMAIL=${GIT_EMAIL:-deploy-bot@apaxsoftware.com}
+
+# We will also set the default site name to be the same as the repository name.
+DEFAULT_SITE=${DEFAULT_SITE:-$CI_PROJECT_NAME}
+
+# By default, we will make the main branch master.
+DEFAULT_BRANCH=${DEFAULT_BRANCH:-master}
+
+# If we are on the default branch.
+if [[ ${CI_BRANCH} == ${DEFAULT_BRANCH} ]] ; then
+  # Use dev as the realm.
+	DEFAULT_REALM=${DEFAULT_REALM:-dev}
+else
+  # Otherwise, name the realm after the CI build number.
+	DEFAULT_REALM=ci-$CI_BUILD_NUMBER
+fi
+
+# If there is a PR number provided, though, then we will use it instead.
+if [[ -n ${PR_NUMBER} ]] ; then
+  DEFAULT_REALM="pr-${PR_NUMBER}"
+fi
+
+CI_PR_URL=${CI_PR_URL:-$CIRCLE_PULL_REQUEST}
+CI_PROJECT_USERNAME=${CI_PROJECT_USERNAME:-$CIRCLE_PROJECT_USERNAME}
+CI_PROJECT_REPONAME=${CI_PROJECT_REPONAME:-$CIRCLE_PROJECT_REPONAME}
+ACQUIA_CANONICAL_ENV=prod
+ACQUIA_SITE=${ACQUIA_SITE:-$DEFAULT_SITE}
+ACQUIA_REALM=${ACQUIA_REALM:-$DEFAULT_REALM}
+
+
+#=====================================================================================================================
+# EXPORT needed environment variables
+#
+# Circle CI 2.0 does not yet expand environment variables so they have to be manually EXPORTed
+# Once environment variables can be expanded this section can be removed
+# See: https://discuss.circleci.com/t/unclear-how-to-work-with-user-variables-circleci-provided-env-variables/12810/11
+# See: https://discuss.circleci.com/t/environment-variable-expansion-in-working-directory/11322
+# See: https://discuss.circleci.com/t/circle-2-0-global-environment-variables/8681
+# Bitbucket has similar issues:
+# https://bitbucket.org/site/master/issues/18262/feature-request-pipeline-command-to-modify
+#=====================================================================================================================
+(
+  echo 'export PATH=$PATH:$HOME/bin'
+  echo "export PR_NUMBER=$PR_NUMBER"
+  echo "export CI_BRANCH=$(echo $CI_BRANCH | grep -v '"'^\(master\|[0-9]\+.x\)$'"')"
+  echo "export CI_BUILD_NUMBER=$CI_BUILD_NUMBER"
+  echo "export DEFAULT_SITE='$DEFAULT_SITE'"
+  echo "export CI_PR_URL='$CI_PR_URL'"
+  echo "export CI_PROJECT_USERNAME='$CI_PROJECT_USERNAME'"
+  echo "export CI_PROJECT_REPONAME='$CI_PROJECT_REPONAME'"
+  echo "export DEFAULT_REALM='$DEFAULT_REALM'"
+  echo "export ACQUIA_SITE='$ACQUIA_SITE'"
+  echo "export ACQUIA_REALM='$ACQUIA_REALM'"
+  echo "export DEFAULT_BRANCH='$DEFAULT_BRANCH'"
+  echo "export ARTIFACTS_DIR='artifacts'"
+  echo "export ARTIFACTS_FULL_DIR='/tmp/artifacts'"
+) >> $BASH_ENV
+
+# If a Acquia CLI credentials are available
+if [[ -n "$ACQUIACLI_KEY" && -n "$ACQUIACLI_SECRET" ]]
+then
+
+  # Authenticate with Acquia CLI
+  acli auth:login --key="$ACQUIACLI_KEY" --secret="$ACQUIACLI_SECRET" > /dev/null 2>&1
+fi
+
+source $BASH_ENV
+
+echo 'Contents of BASH_ENV:'
+cat $BASH_ENV
+echo
+
+# Avoid ssh prompting when connecting to new ssh hosts
+mkdir -p $HOME/.ssh && echo "StrictHostKeyChecking no" >> "$HOME/.ssh/config"
+
+# Configure the GitHub Oauth token if it is available
+if [ -n "$GITHUB_TOKEN" ]; then
+  composer -n config --global github-oauth.github.com $GITHUB_TOKEN
+fi
+
+# Set up our default git config settings if git is available.
+git config --global user.email "${GIT_EMAIL:-no-reply+ci-$CI_BUILD_NUMBER@apaxsoftware.com}"
+git config --global user.name "Deploy Bot"
+git config --global core.fileMode false
