@@ -92,7 +92,7 @@ if [[ -n "$ACQUIACLI_KEY" && -n "$ACQUIACLI_SECRET" ]]
 then
 
   # Authenticate with Acquia CLI
-  acli auth:login --key="$ACQUIACLI_KEY" --secret="$ACQUIACLI_SECRET" > /dev/null 2>&1
+  acli auth:login --key="$ACQUIACLI_KEY" --secret="$ACQUIACLI_SECRET" > /dev/null
 fi
 
 source $BASH_ENV

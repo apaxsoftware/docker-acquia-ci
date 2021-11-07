@@ -54,7 +54,7 @@ ADD . /acquia-ci
 
 # Collect the components we need for this image
 RUN apt-get update
-RUN apt-get install -y ruby jq curl rsync
+RUN apt-get install -y ruby jq curl rsync vim
 RUN gem install circle-cli
 
 # Make sure we are on the latest version of Composer
@@ -73,6 +73,7 @@ RUN curl -OL https://github.com/acquia/cli/releases/latest/download/acli.phar &&
 # Install CLU
 RUN mkdir -p /usr/local/share/clu
 RUN /usr/bin/env COMPOSER_BIN_DIR=/usr/local/bin composer -n --working-dir=/usr/local/share/clu require danielbachhuber/composer-lock-updater:^0.8.2
+RUN cd /usr/local/share/clu && patch -p0 < /acquia-ci/patches/clu.patch
 
 # Install Drush
 RUN mkdir -p /usr/local/share/drush
