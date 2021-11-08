@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -eo pipefail
+
+if [[ -z "$BITBUCKET_USERNAME" || -z "$BITBUCKET_APP_PWD" ]]; then
+  echo 'Missing a required environment variable $BITBUCKET_USERNAME or $BITBUCKET_APP_PWD'
+  exit 1
+fi
+
+BB_REPO=$CI_PROJECT_USERNAME/$CI_PROJECT_REPONAME
+
+curl -s https://api.bitbucket.org/2.0/repositories/$BB_REPO/pullrequests/$1/decline \
+  -u $BITBUCKET_USERNAME:$BITBUCKET_APP_PWD \
+  -X POST > /dev/null 2>&1

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -eo pipefail
+
+if [[ -z "$BITBUCKET_USERNAME" || -z "$BITBUCKET_APP_PWD" ]]; then
+  echo 'Missing a required environment variable $BITBUCKET_USERNAME or $BITBUCKET_APP_PWD'
+  exit 1
+fi
+
+BB_REPO=$CI_PROJECT_USERNAME/$CI_PROJECT_REPONAME
+
+pr_json=$(curl -s -u $BITBUCKET_USERNAME:$BITBUCKET_APP_PWD https://api.bitbucket.org/2.0/repositories/$BB_REPO/pullrequests)
+echo $pr_json | jq -r '.values[] | "\(.id) \"\(.source.branch.name)\" \"\(.title)\""'
