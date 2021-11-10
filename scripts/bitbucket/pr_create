@@ -7,6 +7,8 @@ if [[ -z "$BITBUCKET_USERNAME" || -z "$BITBUCKET_APP_PWD" ]]; then
   exit 1
 fi
 
+
+CLU_BRANCH=$(git symbolic-ref --short -q HEAD)
 BB_REPO=$CI_PROJECT_USERNAME/$CI_PROJECT_REPONAME
 # Remove first two lines and escape string for json
 DESCRIPTION=$(echo "$1" | sed -n '1,2!p' | jq -aRs .)
@@ -21,7 +23,7 @@ generate_post_data()
   "close_source_branch": true,
   "source": {
     "branch": {
-      "name": "$CIRCLE_BRANCH"
+      "name": "$CLU_BRANCH"
     }
   }
 }
@@ -32,4 +34,4 @@ curl -s https://api.bitbucket.org/2.0/repositories/$BB_REPO/pullrequests \
   -u $BITBUCKET_USERNAME:$BITBUCKET_APP_PWD \
   -X POST \
   -H 'Content-Type: application/json' \
-  -d "$(generate_post_data)" > /dev/null 2>&1
+  -d "$(generate_post_data)" > /dev/null

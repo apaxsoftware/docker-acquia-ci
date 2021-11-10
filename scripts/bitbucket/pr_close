@@ -11,4 +11,4 @@ BB_REPO=$CI_PROJECT_USERNAME/$CI_PROJECT_REPONAME
 
 curl -s https://api.bitbucket.org/2.0/repositories/$BB_REPO/pullrequests/$1/decline \
   -u $BITBUCKET_USERNAME:$BITBUCKET_APP_PWD \
-  -X POST > /dev/null 2>&1
+  -X POST > /dev/null
