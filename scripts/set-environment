@@ -34,8 +34,8 @@ GIT_EMAIL=${GIT_EMAIL:-deploy-bot@apaxsoftware.com}
 # We will also set the default site name to be the same as the repository name.
 DEFAULT_SITE=${DEFAULT_SITE:-$CI_PROJECT_NAME}
 
-# By default, we will make the main branch master.
-DEFAULT_BRANCH=${DEFAULT_BRANCH:-master}
+# By default, we will make the main branch dev.
+DEFAULT_BRANCH=${DEFAULT_BRANCH:-dev}
 
 # If we are on the default branch.
 if [[ ${CI_BRANCH} == ${DEFAULT_BRANCH} ]] ; then
@@ -73,7 +73,7 @@ ACQUIA_REALM=${ACQUIA_REALM:-$DEFAULT_REALM}
 (
   echo 'export PATH=$PATH:$HOME/bin'
   echo "export PR_NUMBER=$PR_NUMBER"
-  echo "export CI_BRANCH=$(echo $CI_BRANCH | grep -v '"'^\(master\|[0-9]\+.x\)$'"')"
+  echo "export CI_BRANCH=$(echo $CI_BRANCH | grep -v '"'^\(dev\|[0-9]\+.x\)$'"')"
   echo "export CI_BUILD_NUMBER=$CI_BUILD_NUMBER"
   echo "export DEFAULT_SITE='$DEFAULT_SITE'"
   echo "export CI_PR_URL='$CI_PR_URL'"
