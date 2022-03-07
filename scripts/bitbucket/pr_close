@@ -9,6 +9,14 @@ fi
 
 BB_REPO=$CI_PROJECT_USERNAME/$CI_PROJECT_REPONAME
 
+# Disable auto-deletion of the branch to avoid doubling up in CLU
+curl -s https://api.bitbucket.org/2.0/repositories/$BB_REPO/pullrequests/$1 \
+  -u $BITBUCKET_USERNAME:$BITBUCKET_APP_PWD \
+  -X PUT \
+  -H 'Content-Type: application/json' \
+  -d '{ "close_source_branch": false }' > /dev/null
+
+# Decline the old PR
 curl -s https://api.bitbucket.org/2.0/repositories/$BB_REPO/pullrequests/$1/decline \
   -u $BITBUCKET_USERNAME:$BITBUCKET_APP_PWD \
   -X POST > /dev/null
