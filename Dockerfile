@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM cimg/php:8.1.7-browsers
+FROM cimg/php:8.1.26-browsers
 
 # Switch to root user
 USER root
@@ -52,7 +52,7 @@ RUN /usr/bin/env COMPOSER_BIN_DIR=/usr/local/bin composer -n --working-dir=/usr/
 
 # Install Drush
 RUN mkdir -p /usr/local/share/drush
-RUN /usr/bin/env composer -n --working-dir=/usr/local/share/drush require drush/drush "^10"
+RUN /usr/bin/env composer -n --working-dir=/usr/local/share/drush require drush/drush "^12"
 RUN ln -fs /usr/local/share/drush/vendor/drush/drush/drush /usr/local/bin/drush
 RUN chmod +x /usr/local/bin/drush
 
