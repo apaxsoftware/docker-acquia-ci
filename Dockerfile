@@ -1,7 +1,9 @@
-ARG PHPVERSION
+ARG PHPVERSION=8.3
 
 # Use an official Python runtime as a parent image
 FROM cimg/php:${PHPVERSION}-browsers
+
+ARG ACLIVERSION=2.21.0
 
 # Switch to root user
 USER root
@@ -46,7 +48,7 @@ RUN gem install circle-cli
 RUN composer selfupdate
 
 # Install Acquia CLI
-RUN curl -OL https://github.com/acquia/cli/releases/latest/download/acli.phar && chmod +x acli.phar && ln -s /acquia-ci/acli.phar /usr/local/bin/acli
+RUN curl -OL https://github.com/acquia/cli/releases/download/$ACLIVERSION/acli.phar && chmod +x acli.phar && ln -s /acquia-ci/acli.phar /usr/local/bin/acli
 
 # Install CLU
 RUN mkdir -p /usr/local/share/clu
